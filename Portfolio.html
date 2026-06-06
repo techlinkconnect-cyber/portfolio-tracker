@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portfolio Tracker</title>
+
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            background:#f4f6f9;
+            margin:20px;
+        }
+
+        .container{
+            max-width:1200px;
+            margin:auto;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            box-shadow:0 2px 8px rgba(0,0,0,.1);
+        }
+
+        h2{
+            color:#333;
+        }
+
+        input,select{
+            padding:10px;
+            margin:5px;
+            width:180px;
+        }
+
+        button{
+            padding:10px 20px;
+            background:#2563eb;
+            color:white;
+            border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#1d4ed8;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+        }
+
+        th{
+            background:#1f2937;
+            color:white;
+            padding:12px;
+        }
+
+        td{
+            padding:10px;
+            border-bottom:1px solid #ddd;
+            text-align:center;
+        }
+
+        .summary{
+            display:flex;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+
+        .summary-card{
+            flex:1;
+            min-width:200px;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,.1);
+        }
+
+        .topbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+            gap:20px;
+            padding:20px;
+            background:#fff;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,.08);
+        }
+
+        .topbar h1{
+            margin:0;
+            font-size:24px;
+            color:#111827;
+        }
+
+        .tracker-tabs{
+            display:flex;
+            gap:10px;
+            align-items:center;
+        }
+
+        .topbar-summary{
+            padding:10px 16px;
+            border-radius:8px;
+            background:#f3f4f6;
+            color:#111827;
+            font-weight:700;
+            display:flex;
+            align-items:center;
+            gap:6px;
+        }
+
+        .currency-bar{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:20px;
+            padding:14px 18px;
+            background:#ffffff;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,.06);
+        }
+
+        .currency-bar label{
+            font-weight:700;
+            color:#334155;
+        }
+
+        .currency-bar select{
+            padding:10px 14px;
+            border:1px solid #d1d5db;
+            border-radius:10px;
+            background:#f8fafc;
+            color:#0f172a;
+        }
+
+        .tracker-tab{
+            padding:10px 16px;
+            border:none;
+            border-radius:8px;
+            background:#eef2ff;
+            color:#1d4ed8;
+            cursor:pointer;
+            font-weight:600;
+        }
+
+        .tracker-tab.active{
+            background:#2563eb;
+            color:white;
+        }
+
+        .subtext{
+            margin-top:10px;
+            font-size:14px;
+            color:#4b5563;
+        }
+
+        .subtext span{
+            font-weight:700;
+            color:#111827;
+        }
+
+        .investment-form{
+            display:flex;
+            flex-wrap:nowrap;
+            gap:8px;
+            align-items:center;
+            overflow-x:auto;
+            padding-bottom:10px;
+        }
+
+        .investment-form input,
+        .investment-form select,
+        .investment-form button{
+            flex:0 0 auto;
+            min-width:100px;
+            width:130px;
+        }
+
+        .investment-form input[type="date"]{
+            width:150px;
+        }
+
+        .investment-form button{
+            min-width:130px;
+            width:auto;
+        }
+
+        .selected-row{
+            background:#eef6ff;
+        }
+
+        .value{
+            font-size:24px;
+            font-weight:bold;
+            color:green;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="currency-bar">
+        <label for="currencySelect">Currency:</label>
+        <select id="currencySelect" onchange="changeCurrency(this.value)">
+            <option value="India">India (₹)</option>
+            <option value="USA" selected>United States ($)</option>
+            <option value="Euro">Eurozone (€)</option>
+            <option value="UK">United Kingdom (£)</option>
+            <option value="Japan">Japan (¥)</option>
+            <option value="Canada">Canada (C$)</option>
+        </select>
+    </div>
+
+    <div class="summary">
+
+        <div class="summary-card">
+            <h3>Total Invested</h3>
+            <div class="value" id="totalInvested">$0</div>
+        </div>
+
+        <div class="summary-card">
+            <h3>Current Value</h3>
+            <div class="value" id="currentValue">$0</div>
+        </div>
+
+        <div class="summary-card">
+            <h3>Total Gain/Loss</h3>
+            <div class="value" id="gainLoss">$0</div>
+        </div>
+
+        <div class="summary-card" id="portfolioXiprCard">
+            <h3>Portfolio XIPR (%)</h3>
+            <div class="value" id="topNetXIPR">—</div>
+        </div>
+
+        <div class="investment-form">
+            <input type="text" id="assetName" placeholder="Asset Name">
+            <select id="assetType">
+                <option>Stock</option>
+                <option>Mutual Fund</option>
+                <option>ETF</option>
+                <option>Fixed Assets</option>
+                <option>Real Estate</option>
+                <option>Gold</option>
+                <option>Silver</option>
+                <option>Crypto</option>
+                <option>Others</option>
+            </select>
+            <input type="number" id="investedAmount" placeholder="Invested Amount">
+            <input type="number" id="currentAmount" placeholder="Current Value">
+            <input type="date" id="startDate" placeholder="Start Date">
+            <button id="submitButton" type="button" onclick="submitInvestment()">Add Investment</button>
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Portfolio Holdings</h2>
+
+        <table>
+
+            <thead>
+            <tr>
+                <th>Select</th>
+                <th>Asset</th>
+                <th>Type</th>
+                <th>Invested</th>
+                <th>Current Value</th>
+                <th>Start Date</th>
+                <th>XIPR %</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+
+            <tbody id="portfolioTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+let totalInvested = 0;
+let totalCurrent = 0;
+let investments = [];
+let currentCurrency = '$';
+let selectedInvestmentId = null;
+let currentEditId = null;
+
+function submitInvestment(){
+    if(currentEditId){
+        updateInvestment();
+        return;
+    }
+
+    let assetName =
+        document.getElementById("assetName").value;
+
+    let assetType =
+        document.getElementById("assetType").value;
+
+    let invested =
+        parseFloat(document.getElementById("investedAmount").value);
+
+    let current =
+        parseFloat(document.getElementById("currentAmount").value);
+
+    let startDateValue =
+        document.getElementById("startDate").value;
+
+    if(!assetName || isNaN(invested) || isNaN(current) || !startDateValue){
+        alert("Please enter all values, including start date");
+        return;
+    }
+
+    let startDate = new Date(startDateValue);
+    if(isNaN(startDate)){
+        alert("Please enter a valid start date");
+        return;
+    }
+
+    let returnPercent =
+        (((current-invested)/invested)*100).toFixed(2);
+
+    let xiprValue = calculateXIPR(invested, current, startDate);
+    let xiprLabel = xiprValue === null ? "—" : (xiprValue * 100).toFixed(2);
+    let id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+    investments.push({
+        id,
+        assetName,
+        assetType,
+        invested,
+        current,
+        startDate,
+        startDateValue,
+        xiprValue
+    });
+
+    let row = document.createElement("tr");
+    row.dataset.id = id;
+
+    row.innerHTML = `
+        <td>
+            <label>
+                <input type="radio" name="selectedInvestment" onclick="selectInvestment('${id}')" aria-label="Select investment">
+            </label>
+        </td>
+        <td>${assetName}</td>
+        <td>${assetType}</td>
+        <td>${formatCurrency(invested)}</td>
+        <td>${formatCurrency(current)}</td>
+        <td>${startDateValue}</td>
+        <td>${xiprLabel}</td>
+        <td>
+            <button onclick="deleteRow(this)">
+                Delete
+            </button>
+        </td>
+    `;
+
+    document.getElementById("portfolioTable")
+            .appendChild(row);
+
+    totalInvested += invested;
+    totalCurrent += current;
+
+    updateSummary();
+
+    document.getElementById("assetName").value="";
+    document.getElementById("investedAmount").value="";
+    document.getElementById("currentAmount").value="";
+    document.getElementById("startDate").value="";
+}
+
+function calculateXIPR(invested, current, startDate){
+    let now = new Date();
+    let elapsedDays = (now - startDate) / (1000 * 60 * 60 * 24);
+    if(elapsedDays <= 0 || invested <= 0){
+        return null;
+    }
+
+    let years = elapsedDays / 365.25;
+    return Math.pow(current / invested, 1 / years) - 1;
+}
+
+function calculateOverallXIPR(){
+    if(investments.length === 0){
+        return "—";
+    }
+
+    let now = new Date();
+    let totalInvestedValue = investments.reduce((sum, item) => sum + item.invested, 0);
+    if(totalInvestedValue <= 0){
+        return "—";
+    }
+
+    let totalCurrentValue = investments.reduce((sum, item) => sum + item.current, 0);
+    let totalWeightedXipr = investments.reduce((sum, item) => {
+        if(typeof item.xiprValue !== 'number'){
+            return sum;
+        }
+        return sum + item.xiprValue * item.invested;
+    }, 0);
+
+    let netXipr = totalWeightedXipr / totalInvestedValue;
+    if(!isFinite(netXipr)){
+        return null;
+    }
+
+    return netXipr;
+}
+
+function deleteRow(button){
+    let row = button.closest('tr');
+    let id = row.dataset.id;
+    let itemIndex = investments.findIndex(item => item.id === id);
+    if(itemIndex >= 0){
+        let item = investments[itemIndex];
+        totalInvested -= item.invested;
+        totalCurrent -= item.current;
+        investments.splice(itemIndex, 1);
+    }
+
+    if(selectedInvestmentId === id){
+        clearSelection();
+    }
+
+    row.remove();
+    recalculateTotals();
+    updateSummary();
+}
+
+function selectInvestment(id){
+    selectedInvestmentId = id;
+    currentEditId = id;
+    document.querySelectorAll('#portfolioTable tr').forEach(row => {
+        row.classList.toggle('selected-row', row.dataset.id === id);
+        let radio = row.querySelector('input[name="selectedInvestment"]');
+        if(radio){
+            radio.checked = row.dataset.id === id;
+        }
+    });
+
+    let item = investments.find(item => item.id === id);
+    if(item){
+        document.getElementById('assetName').value = item.assetName || '';
+        document.getElementById('assetType').value = item.assetType || 'Stock';
+        document.getElementById('investedAmount').value = item.invested;
+        document.getElementById('currentAmount').value = item.current;
+        document.getElementById('startDate').value = item.startDateValue;
+    }
+
+    setSubmitButtonLabel();
+}
+
+function updateInvestment(){
+    if(!currentEditId){
+        alert('No investment is currently being edited. Use Edit Selected first.');
+        return;
+    }
+
+    let assetName = document.getElementById('assetName').value;
+    let assetType = document.getElementById('assetType').value;
+    let invested = parseFloat(document.getElementById('investedAmount').value);
+    let current = parseFloat(document.getElementById('currentAmount').value);
+    let startDateValue = document.getElementById('startDate').value;
+
+    if(!assetName || isNaN(invested) || isNaN(current) || !startDateValue){
+        alert('Please enter all values, including start date');
+        return;
+    }
+
+    let startDate = new Date(startDateValue);
+    if(isNaN(startDate)){
+        alert('Please enter a valid start date');
+        return;
+    }
+
+    let item = investments.find(item => item.id === currentEditId);
+    if(!item){
+        alert('Investment not found.');
+        return;
+    }
+
+    item.assetName = assetName;
+    item.assetType = assetType;
+    item.invested = invested;
+    item.current = current;
+    item.startDate = startDate;
+    item.startDateValue = startDateValue;
+    item.xiprValue = calculateXIPR(invested, current, startDate);
+
+    let row = document.querySelector(`#portfolioTable tr[data-id='${currentEditId}']`);
+    if(row){
+        row.children[1].textContent = assetName;
+        row.children[2].textContent = assetType;
+        row.children[3].textContent = formatCurrency(invested);
+        row.children[4].textContent = formatCurrency(current);
+        row.children[5].textContent = startDateValue;
+        row.children[6].textContent = item.xiprValue === null ? '—' : (item.xiprValue * 100).toFixed(2);
+    }
+
+    currentEditId = null;
+    clearSelection();
+    recalculateTotals();
+    updateSummary();
+}
+
+function clearForm(){
+    document.getElementById('assetName').value = '';
+    document.getElementById('assetType').value = 'Stock';
+    document.getElementById('investedAmount').value = '';
+    document.getElementById('currentAmount').value = '';
+    document.getElementById('startDate').value = '';
+}
+
+function setSubmitButtonLabel(){
+    let button = document.getElementById('submitButton');
+    if(button){
+        button.textContent = currentEditId ? 'Update Investment' : 'Add Investment';
+    }
+}
+
+function clearSelection(){
+    selectedInvestmentId = null;
+    currentEditId = null;
+    clearForm();
+    setSubmitButtonLabel();
+    document.querySelectorAll('#portfolioTable tr').forEach(row => {
+        row.classList.remove('selected-row');
+        let radio = row.querySelector('input[name="selectedInvestment"]');
+        if(radio){
+            radio.checked = false;
+        }
+    });
+}
+
+function recalculateTotals(){
+    totalInvested = investments.reduce((sum, item) => sum + item.invested, 0);
+    totalCurrent = investments.reduce((sum, item) => sum + item.current, 0);
+}
+
+function changeCurrency(country){
+    let currencyMap = {
+        India: '₹',
+        USA: '$',
+        Euro: '€',
+        UK: '£',
+        Japan: '¥',
+        Canada: 'C$'
+    };
+    currentCurrency = currencyMap[country] || '₹';
+    updateSummary();
+    refreshTableCurrency();
+}
+
+function formatCurrency(value){
+    return currentCurrency + value.toLocaleString();
+}
+
+function refreshTableCurrency(){
+    document.querySelectorAll('#portfolioTable tr').forEach(row => {
+        let id = row.dataset.id;
+        let item = investments.find(item => item.id === id);
+        if(item){
+            row.children[3].textContent = formatCurrency(item.invested);
+            row.children[4].textContent = formatCurrency(item.current);
+        }
+    });
+}
+
+function selectTracker(value, button){
+    let title = document.getElementById("pageTitle");
+    let labels = {
+        default: "📈 Portfolio Tracker",
+        equity: "📊 Equity Tracker",
+        mutualFund: "💼 Mutual Fund Tracker",
+        etf: "📉 ETF Tracker"
+    };
+    title.textContent = labels[value] || labels.default;
+
+    if(button){
+        document.querySelectorAll('.tracker-tab').forEach(tab => tab.classList.remove('active'));
+        button.classList.add('active');
+    }
+}
+
+function updateSummary(){
+
+    document.getElementById("totalInvested")
+        .innerHTML =
+        formatCurrency(totalInvested);
+
+    document.getElementById("currentValue")
+        .innerHTML =
+        formatCurrency(totalCurrent);
+
+    let gain =
+        totalCurrent - totalInvested;
+
+    document.getElementById("gainLoss")
+        .innerHTML =
+        formatCurrency(gain);
+
+    let netXipr = calculateOverallXIPR();
+    let xiprCard = document.getElementById('portfolioXiprCard');
+    if(investments.length === 0){
+        if(xiprCard){
+            xiprCard.style.display = 'none';
+        }
+        document.getElementById("topNetXIPR").textContent = "—";
+    } else {
+        if(xiprCard){
+            xiprCard.style.display = '';
+        }
+        document.getElementById("topNetXIPR").textContent = netXipr === null ? "—" : (netXipr * 100).toFixed(2) + "%";
+    }
+}
+
+</script>
+
+</body>
+</html>
