@@ -1,0 +1,4 @@
+node_modules
+.expo
+*.aab
+.DS_Store

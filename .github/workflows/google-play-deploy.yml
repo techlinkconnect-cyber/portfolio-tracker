@@ -1,0 +1,52 @@
+name: Build and Deploy Android to Google Play
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Build Android App Bundle
+        env:
+          EXPO_CLI_NO_DOCTOR: 1
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+        run: |
+          eas login --token "$EAS_TOKEN"
+          eas build --platform android --profile production --non-interactive --wait --json > eas-build-output.json
+
+      - name: Download generated AAB
+        run: |
+          AAB_URL=$(jq -r '.artifacts[0].url // .artifact.url // .url' eas-build-output.json)
+          if [ -z "$AAB_URL" ] || [ "$AAB_URL" = "null" ]; then
+            echo "Could not parse AAB URL from EAS build output"
+            cat eas-build-output.json
+            exit 1
+          fi
+          curl -L "$AAB_URL" -o portfolio-tracker.aab
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.profiletracker.app
+          releaseFiles: portfolio-tracker.aab
+          track: production
